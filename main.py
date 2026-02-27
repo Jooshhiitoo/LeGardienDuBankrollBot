@@ -1,7 +1,7 @@
+from psycopg.rows import dict_row
 import os
 import logging
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
@@ -17,8 +17,7 @@ if not DATABASE_URL:
     raise ValueError("DATABASE_URL manquant")
 
 # ---------------- DATABASE ----------------
-conn = psycopg2.connect(DATABASE_URL)
-conn.autocommit = True
+conn = psycopg.connect(DATABASE_URL, autocommit=True)
 
 def init_db():
     with conn.cursor() as cur:
@@ -32,9 +31,9 @@ def init_db():
         """)
 
 def get_user(user_id):
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("SELECT * FROM users WHERE user_id=%s", (user_id,))
-        return cur.fetchone()
+    with conn.cursor(row_factory=dict_row) as cur:
+    cur.execute("SELECT * FROM users WHERE user_id=%s", (user_id,))
+    return cur.fetchone()
 
 def update_bankroll(user_id, new_value):
     user = get_user(user_id)
